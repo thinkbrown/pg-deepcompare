@@ -1,0 +1,11 @@
+[Truth]
+db_name = 
+db_user = 
+db_host = 
+db_pass = 
+
+[Test]
+db_name = 
+db_user = 
+db_host = 
+db_pass = 
