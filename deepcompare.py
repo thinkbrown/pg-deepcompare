@@ -19,11 +19,11 @@ def config_validator(SectionName):
                 params[parameter] = Config.get(SectionName, parameter)
             else:
                 print parameter + " missing from " + SectionName + "configuration"
-                params[parameter] = input("Enter a " + parameter + ": ")
+                params[parameter] = raw_input("Enter a " + parameter + ": ")
     else:
         print SectionName + " section missing from configuration"
         for parameter in ['db_name', 'db_user', 'db_pass', 'db_host']:
-            params[parameter] = input("Enter a " + parameter + ": ")
+            params[parameter] = raw_input("Enter a " + parameter + ": ")
     return "dbname='" + params['db_name'] + "' user='" + params['db_user'] + "' host='" + params['db_host'] + "' password='" + params['db_pass'] + "'"
 
 
@@ -45,9 +45,8 @@ def db_worker(conf_name, connection_string, table_name, output, row_only):
         cur.close()
         db.close()
     except:
-        cur.execute("select md5(cast(tab.* as text)) from " + table_name + " tab;")
-        row_only.value = 1
-        output = dict(cur.fetchall())
+        cur.execute("select count(*) from " + table_name + " tab;")
+        row_only.value = cur.fetchone()
         cur.close()
         db.close()
 
@@ -111,16 +110,13 @@ def main():
         test_proc.join()
 
         if bool(truth_rowonly.value) != bool(test_rowonly.value):
-            print "One of these things is not like the other.... Godspeed"
+            print "\t One of these things is not like the other.... Godspeed"
             sleep(3)
-            print "(Primary key mismatch)"
+            print "\t (Primary key mismatch)"
             continue
-        if truth_rowonly.value:
+        if bool(truth_rowonly.value):
             print "\t NO PRIMARY KEY, only running row count validation"
-            loop_truth_values = dict(truth_values)
-            loop_test_values = dict(test_values)
-
-            if len(loop_truth_values) != len(loop_test_values):
+            if len(truth_rowonly.value) != len(test_rowonly.value):
                 print "\t Row count ERROR! (" + truth_values.len() + " vs. " + test_values.len() + ")"
             else:
                 print "\t Row count OK"
