@@ -11,6 +11,9 @@ from multiprocessing import Process, Manager, Value
 Config = ConfigParser.ConfigParser()
 Config.read('task.cfg')
 
+def prettyprint(list):
+    for i in list: print "\t " + i
+
 def config_validator(SectionName):
     params = {}
     if Config.has_section(SectionName):
@@ -87,6 +90,12 @@ def main():
 
     if truth_table_list != test_table_list:
         print "ERROR: Databases do not contain the same tables. I'm out..."
+        if len(truth_table_list) > len(test_table_list):
+            print "Truth database has additional rows:"
+            prettyprint(list(set(truth_table_list)-set(test_table_list)))
+        else:
+            print "Test database has additional rows:"
+            prettyprint(list(set(test_table_list)-set(truth_table_list)))
         exit()
 
     manager = Manager()
