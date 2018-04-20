@@ -1,8 +1,7 @@
 # pg-deepcompare
 
-
 *Becuase comparing just the schema is for people that trust their tools.*
-------------
+
 
 ## Setup
 
@@ -15,4 +14,6 @@
 ------------
 
 Copyright PatientsLikeMe 2018
-logan.brown@patientslikeme.com
+
+[logan.brown@patientslikeme.com](mailto:logan.brown@patientslikeme.com)
+
