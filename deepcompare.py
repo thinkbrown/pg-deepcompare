@@ -45,13 +45,12 @@ def db_worker(conf_name, connection_string, table_name, output, row_only):
         primary_key = cur.fetchone()[0]
         cur.execute("select " + primary_key + ",md5(cast(tab.* as text)) from " + table_name + " tab;")
         output = dict(cur.fetchall())
-        cur.close()
-        db.close()
     except:
+        print "\t No PKey found"
         cur.execute("select count(*) from " + table_name + " tab;")
-        row_only.value = cur.fetchone()
-        cur.close()
-        db.close()
+        row_only.value = int(cur.fetchone())
+    cur.close()
+    db.close()
 
 #
 # Let's be a program!
@@ -89,7 +88,7 @@ def main():
     test_db.close()
 
     if truth_table_list != test_table_list:
-        print "ERROR: Databases do not contain the same tables. I'm out..."
+        print "ERROR: Databases do not contain the same tables. You're on your own..."
         if len(truth_table_list) > len(test_table_list):
             print "Truth database has additional rows:"
             prettyprint(list(set(truth_table_list)-set(test_table_list)))
