@@ -21,6 +21,7 @@ from configValidator import configValidator
 Config = configparser.ConfigParser()
 Config.read('task.cfg')
 debug = Config.getboolean("Global", "debug")
+contest = Config.getboolean("Global", "connection_test")
 
 
 # Globals so we can terminate our child processes on SIGINT
@@ -60,6 +61,9 @@ def main():
         print("Connected successfully to the Test database!")
     except:
         print("Unable to establish connection to the Test database")
+        exit()
+    if contest:
+        print("Both Connections established... Go time!")
         exit()
 
     database = sqlite3.connect("file:/dev/shm/deepcompare?cache=shared", check_same_thread=False, uri=True)

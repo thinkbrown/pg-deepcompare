@@ -1,14 +1,15 @@
 [Global]
-debug = false
+debug = False
+connection_test = True
 
 [Truth]
-db_name = 
-db_user = 
-db_host = 
-db_pass = 
+db_name =
+db_user =
+db_host =
+db_pass =
 
 [Test]
-db_name = 
-db_user = 
-db_host = 
-db_pass = 
+db_name =
+db_user =
+db_host =
+db_pass =
