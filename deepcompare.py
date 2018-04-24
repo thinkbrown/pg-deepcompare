@@ -85,7 +85,7 @@ def main():
     #    print(tab
 
     for table in truth_table_list:
-        print("Validating table " + table + ":")
+        print("Validating table %s:" % table)
         truth_rowonly.value = 0
         test_rowonly.value = 0
         truth_proc = Process(target=dbWorker, args=("truth", truth_string, table, truth_rowonly, debug))
@@ -103,7 +103,7 @@ def main():
         if bool(truth_rowonly.value):
             print("\t NO PRIMARY KEY, only running row count validation")
             if truth_rowonly.value != test_rowonly.value:
-                print("\t Row count ERROR! (" + truth_values.len() + " vs. " + test_values.len() + ")")
+                print("\t Row count ERROR! (%d vs. %d)" % (truth_values.len(), test_values.len()))
             else:
                 print("\t Row count OK")
         else:
@@ -123,9 +123,9 @@ def main():
                     break
                 if (test_val[0] != true_val[0]) or (test_val[1] != true_val[1]):
                     error += 1
-                    print("\t Hash ERROR! (PK ID: " + true_val[0] + ")")
+                    print("\t Hash ERROR! (PK ID: %d)" % true_val[0])
             if error:
-                print("\t Hash count complete (" + error + " errors)")
+                print("\t Hash count complete (%d errors)" % error)
             else:
                 print("\tHash comparison OK")
             mem_true.close()
