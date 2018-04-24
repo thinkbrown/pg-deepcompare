@@ -10,8 +10,10 @@ import sqlite3
 import os
 import signal
 import sys
+from dbworker import dbWorker
 from multiprocessing import Process, Manager, Value
-
+from helpers import prettyprint, getCount
+from configValidator import configValidator
 
 # Read in the task definition
 Config = configparser.ConfigParser()
@@ -22,95 +24,7 @@ debug = Config.getboolean("Global", "debug")
 truth_proc = 0
 test_proc = 0
 
-def prettyprint(list):
-    for i in list: print("\t " + i)
 
-def config_validator(SectionName):
-    params = {}
-    if Config.has_section(SectionName):
-        for parameter in ['db_name', 'db_user', 'db_pass', 'db_host']:
-            if Config.has_option(SectionName, parameter):
-                params[parameter] = Config.get(SectionName, parameter)
-            else:
-                print(parameter + " missing from " + SectionName + "configuration")
-                params[parameter] = raw_input("Enter a " + parameter + ": ")
-    else:
-        print(SectionName + " section missing from configuration")
-        for parameter in ['db_name', 'db_user', 'db_pass', 'db_host']:
-            params[parameter] = raw_input("Enter a " + parameter + ": ")
-    return "dbname='" + params['db_name'] + "' user='" + params['db_user'] + "' host='" + params['db_host'] + "' password='" + params['db_pass'] + "'"
-
-def wprint(text):
-    if debug:
-        print("%d: %s" % (os.getpid(), text))
-    else:
-        print(text)
-#
-# The worker for our multiprocessing "thread"
-#
-def db_worker(conf_name, connection_string, table_name, row_only):
-    if debug:
-        wprint("Connecting to %s" % conf_name)
-    try:
-        db = psycopg2.connect(connection_string)
-        cur = db.cursor()
-    except Exception as e:
-        wprint("Unable to establish connection to the " + conf_name + " database")
-        wprint(e)
-        exit()
-    try:
-        mem_db = sqlite3.connect("file:/dev/shm/deepcompare?cache=shared", check_same_thread=False, uri=True)
-        mem_db.isolation_level = None
-        mem_cur = mem_db.cursor()
-    except Exception as e:
-        wprint("Unable to establish connection to the in-memory database")
-        wprint(e)
-        exit()
-    try:
-        mem_cur.execute("CREATE TABLE %s (PKey, md5sum)" % (table_name + "_" + conf_name))
-        mem_cur.execute("CREATE INDEX %s ON %s (PKey)" % (table_name + "_" + conf_name + "_idx", (table_name + "_" + conf_name)))
-        mem_db.commit()
-    except Exception as e:
-        wprint("Unable to initialize tables in the in-memory database")
-        wprint(e)
-        exit()
-    cur.execute("SELECT c.column_name FROM information_schema.key_column_usage AS c JOIN information_schema.table_constraints AS t ON t.constraint_name = c.constraint_name WHERE t.table_name ='" + table_name + "' AND t.constraint_type = 'PRIMARY KEY';")
-    try:
-        primary_key = cur.fetchone()[0]
-        cur.execute("select " + primary_key + ",md5(cast(tab.* as text)) from " + table_name + " tab;")
-    except Exception as e:
-        wprint("\t No PKey found")
-        wprint(e)
-        cur.execute("select count(*) from " + table_name + " tab;")
-        row_only.value = int(cur.fetchone()[0])
-        cur.close()
-        db.close()
-        mem_cur.close()
-        mem_db.close()
-        exit()
-    try:
-        while True:
-            row = cur.fetchone()
-            if row == None:
-                break
-            mem_cur.execute("INSERT INTO %s VALUES ('%s', '%s')" % (table_name + "_" + conf_name, row[0], row[1]))
-            mem_db.commit()
-    except Exception as e:
-        wprint("Unable to store in the in-memory database")
-        wprint(e)
-    cur.close()
-    db.close()
-    mem_cur.execute("SELECT COUNT(*) from %s" % (table_name + "_" + conf_name))
-    wprint("Inserted %d rows into table" % mem_cur.fetchone()[0])
-    mem_cur.close()
-    mem_db.close()
-
-def get_count(table_name, conf_name, database):
-    mem_db = database.cursor()
-    mem_db.execute("SELECT count(*) FROM %s" % (table_name + "_" + conf_name)) # I know this isn't the safe way to do this, but it isn't user facing code
-    val = mem_db.fetchone()[0]
-    mem_db.close()
-    return val
 #
 # Let's be a program!
 #
@@ -119,23 +33,25 @@ def main():
     global truth_proc
     global test_proc
     # Let's do some shit
-    truth_string = config_validator("Truth")
-    test_string = config_validator("Test")
+    truth_string = configValidator(Config, "Truth")
+    test_string = configValidator(Config, "Test")
     try:
         truth_db = psycopg2.connect(truth_string)
         truth_cur = truth_db.cursor()
-    except:
+        print("Connected successfully to the Truth database!")
+    except Exception as e:
         print("Unable to establish connection to the Truth database")
+        print(e)
         exit()
-    print("Connected successfully to the Truth database!")
 
     try:
-        test_db = psycopg2.connect(config_validator("Test"))
+        test_db = psycopg2.connect(test_string)
         test_cur = test_db.cursor()
+        print("Connected successfully to the Test database!")
     except:
-        print("Unable to establish connection to the Truth database")
+        print("Unable to establish connection to the Test database")
         exit()
-    print("Connected successfully to the Test database!")
+
     database = sqlite3.connect("file:/dev/shm/deepcompare?cache=shared", check_same_thread=False, uri=True)
     database.isolation_level = None
 
@@ -172,9 +88,9 @@ def main():
         print("Validating table " + table + ":")
         truth_rowonly.value = 0
         test_rowonly.value = 0
-        truth_proc = Process(target=db_worker, args=("truth", truth_string, table, truth_rowonly))
+        truth_proc = Process(target=dbWorker, args=("truth", truth_string, table, truth_rowonly, debug))
         truth_proc.start()
-        test_proc = Process(target=db_worker, args=("test", test_string, table, test_rowonly))
+        test_proc = Process(target=dbWorker, args=("test", test_string, table, test_rowonly, debug))
         test_proc.start()
         truth_proc.join()
         test_proc.join()
@@ -191,7 +107,7 @@ def main():
             else:
                 print("\t Row count OK")
         else:
-            if get_count(table, "test", database) != get_count(table, "truth", database):
+            if getCount(table, "test", database) != getCount(table, "truth", database):
                 print("\t Row count ERROR!")
             else:
                 print("\t Row count OK")
