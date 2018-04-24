@@ -1,3 +1,6 @@
+[Global]
+debug = false
+
 [Truth]
 db_name = 
 db_user = 
