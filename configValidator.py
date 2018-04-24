@@ -1,3 +1,9 @@
+# configValidator: parses a configuration to validate and construct a postgres
+# connection string
+#
+# Config: a configparser.ConfigParser() object
+# SectionName: A string indicating which section of the configuration to generate a connection string from
+
 def configValidator(Config, SectionName):
     params = {}
     if Config.has_section(SectionName):

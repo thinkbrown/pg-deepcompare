@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 #
 # Compare two databases to ensure data integrity
-#
+# Copyright 2018 PatientsLikeMe Inc.
+# logan.brown@patientslikeme.com
 
 # Imports
 import psycopg2
@@ -15,24 +16,33 @@ from multiprocessing import Process, Manager, Value
 from helpers import prettyprint, getCount
 from configValidator import configValidator
 
-# Read in the task definition
+
+# Read in the task definition (this needs future work to allow commandline flags)
 Config = configparser.ConfigParser()
 Config.read('task.cfg')
 debug = Config.getboolean("Global", "debug")
 
-# Globals so we can kill our kids
+
+# Globals so we can terminate our child processes on SIGINT
 truth_proc = 0
 test_proc = 0
 
 
 #
-# Let's be a program!
+# Self explainatory
 #
+
 def main():
-    #Handle our Globals
+    # Pull in the globals
     global truth_proc
     global test_proc
-    # Let's do some shit
+
+
+    # Preparations: Get the list of tables from each database and compare them.
+    # If the list of tables doesn't match, bail out. THis also serves as a test
+    # to ensure we can connect to the configured databases
+    #
+
     truth_string = configValidator(Config, "Truth")
     test_string = configValidator(Config, "Test")
     try:
@@ -77,13 +87,25 @@ def main():
             prettyprint(list(set(test_table_list)-set(truth_table_list)))
         exit()
 
+
+    # Setting up manager variables: these are used if a table does not contain a
+    # primary key. The row count is stored in these. Additionally they are cast to
+    # a boolean to determine if the table is missing a primary key in the main loop
+
     manager = Manager()
     truth_rowonly = Value('i', 0)
     test_rowonly = Value('i', 0)
-    #print("Tables to verify: ",
-    #for tab in truth_table_list:
-    #    print(tab
 
+
+    # Main logic loop: for every table in the list that we previously determined
+    # and validated, spin off two child processes to retrieve information about the
+    # table from both databases (truth and test) and then compare the results.
+    # First, we check if both tables have a primary key. If only one table has a
+    # primary key, we abandon the table. Clearly something is wrong. If neither
+    # table has a primary key, we compare the row counts only. If both tables have
+    # primary keys, we validate the row count and then compare the md5 hash of each
+    # row in the test database to the truth database.
+    #
     for table in truth_table_list:
         print("Validating table %s:" % table)
         truth_rowonly.value = 0
@@ -96,9 +118,9 @@ def main():
         test_proc.join()
 
         if bool(truth_rowonly.value) != bool(test_rowonly.value):
-            print("\t One of these things is not like the other.... Godspeed")
+            print("\t One of these things is not like the other....")
+            print("\t Primary key mismatch: something is very very wrong")
             sleep(3)
-            print("\t (Primary key mismatch)")
             continue
         if bool(truth_rowonly.value):
             print("\t NO PRIMARY KEY, only running row count validation")
@@ -131,12 +153,20 @@ def main():
             mem_true.close()
             mem_test.close()
 
+
+# graceful_shutdown: Gracefully terminate our child processes and remove the
+# sqlite database stored in /dev/shm so the task can be run again without issue
+#
+
 def graceful_shutdown(signal, frame):
         print('Terminating gracefully...')
         test_proc.terminate()
         truth_proc.terminate()
         os.remove('/dev/shm/deepcompare')
         sys.exit(0)
+
+# Glue logic to start the main function and remove the sqlite database on successful
+# completion
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, graceful_shutdown)

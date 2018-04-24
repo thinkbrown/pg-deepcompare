@@ -5,6 +5,20 @@ import psycopg2
 import sqlite3
 from helpers import wprint
 
+# dbWorker: Instantiated by multiprocessing as a new process, this thread connects
+# to a Postgresql database, and runs a series of queries about a given table.
+# Specifically, it determines the primary key of the table, then runs a select on
+# all rows that retrieves the primary key and the md5 checksum of the row's string
+# representation. If the primary key does not exist, we only retrieve the row count
+# of the table. The results of these queries are stored in a memory-backed sqlite3
+# database for comparison to another database
+#
+# conf_name: The human readable name of this database (canonically test or truth)
+# connection_string: The connection string for the database we're going to query
+# table_name: What table we wish to gather information about
+# row_only: A multiprocessing value used if the table doesn't have a primary key
+# debug: A boolean representing if we're in debug mode or not
+
 def dbWorker(conf_name, connection_string, table_name, row_only, debug):
     if debug:
         wprint("Connecting to %s" % conf_name, debug)
