@@ -1,7 +1,10 @@
 # pg-deepcompare
 
-*Becuase comparing just the schema is for people that trust their tools.*
+*Becuase just comparing the schema is for people that trust their tools.*
 
+## Requirements
+- Python 3
+- See requirements.txt for specific module requirements
 
 ## Setup
 
