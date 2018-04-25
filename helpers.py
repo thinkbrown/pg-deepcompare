@@ -31,7 +31,7 @@ def wprint(text, debug):
 
 def getCount(table_name, conf_name, database):
     mem_db = database.cursor()
-    mem_db.execute("SELECT count(*) FROM %s" % (table_name[0] + "_" + table_name[1] + "_" + "truth")) # I know this isn't the safe way to do this, but it isn't user facing code
+    mem_db.execute("SELECT count(*) FROM %s" % (table_name[0] + "_" + table_name[1] + "_" + conf_name)) # I know this isn't the safe way to do this, but it isn't user facing code
     val = mem_db.fetchone()[0]
     mem_db.close()
     return val
