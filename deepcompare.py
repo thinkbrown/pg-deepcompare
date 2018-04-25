@@ -112,7 +112,7 @@ def main():
     # row in the test database to the truth database.
     #
     for table in truth_table_list:
-        print("Validating table %s:" % table)
+        print("Validating table %s:%s:" % table)
         truth_rowonly.value = 0
         test_rowonly.value = 0
         truth_proc = Process(target=dbWorker, args=("truth", truth_string, table, truth_rowonly, debug))
