@@ -135,7 +135,7 @@ def main():
             else:
                 print("\t Row count OK")
         else:
-            if getCount(table, "test", database) != getCount(table, "truth", database):
+            if getCount(table, "test", test_database) != getCount(table, "truth", truth_database):
                 print("\t Row count ERROR!")
             else:
                 print("\t Row count OK")
