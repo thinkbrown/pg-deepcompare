@@ -149,7 +149,7 @@ def main():
                     break
                 if (test_val[0] != true_val[0]) or (test_val[1] != true_val[1]):
                     error += 1
-                    print("\t Hash ERROR! (PK ID: %d)" % true_val[0])
+                    print("\t Hash ERROR! (PK ID: %s)" % true_val[0])
             if error:
                 print("\t Hash count complete (%d errors)" % error)
             else:
