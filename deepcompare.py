@@ -66,8 +66,10 @@ def main():
         print("Both Connections established... Go time!")
         exit()
 
-    database = sqlite3.connect("file:/dev/shm/deepcompare", uri=True)
-    database.isolation_level = None
+    truth_database = sqlite3.connect("file:/dev/shm/deepcompare_%s" % "truth", uri=True)
+    truth_database.isolation_level = None
+    test_database = sqlite3.connect("file:/dev/shm/deepcompare_%s" % "test", uri=True)
+    test_database.isolation_level = None
 
     truth_cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
     truth_table_list = list(map(lambda x: x[0], truth_cur.fetchall()))
@@ -138,9 +140,9 @@ def main():
             else:
                 print("\t Row count OK")
             error = 0
-            mem_true = database.cursor()
+            mem_true = truth_database.cursor()
             mem_true.execute("SELECT * from %s order by PKey" % (table + "_" + "truth"))
-            mem_test = database.cursor()
+            mem_test = test_database.cursor()
             mem_test.execute("SELECT * from %s order by PKey" % (table + "_" + "test"))
             while True:
                 true_val = mem_true.fetchone()
