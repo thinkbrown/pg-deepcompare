@@ -156,8 +156,8 @@ def main():
             else:
                 print("\tHash comparison OK")
 
-            mem_true.execute("DROP TABLE %s" % (table_[0] + "_" + table[1] + "_" + "truth"))
-            mem_test.execute("DROP TABLE %s" % (table_[0] + "_" + table[1] + "_" + "test"))
+            mem_true.execute("DROP TABLE %s" % (table[0] + "_" + table[1] + "_" + "truth"))
+            mem_test.execute("DROP TABLE %s" % (table[0] + "_" + table[1] + "_" + "test"))
             mem_true.close()
             mem_test.close()
 
