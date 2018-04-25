@@ -39,7 +39,7 @@ def dbWorker(conf_name, connection_string, table_name, row_only, debug):
         exit()
     try:
         mem_cur.execute("CREATE TABLE %s (PKey, md5sum)" % (table_name[0] + "_" + table_name[1] + "_" + conf_name))
-        mem_cur.execute("CREATE INDEX %s ON %s (PKey)" % (table_name[0] + "_" + table_name[1] + "_" + conf_name + "_idx", (table_name + "_" + conf_name)))
+        mem_cur.execute("CREATE INDEX %s ON %s (PKey)" % (table_name[0] + "_" + table_name[1] + "_" + conf_name + "_idx", (table_name[0] + "_" + table_name[1] + "_" + conf_name)))
         mem_db.commit()
     except Exception as e:
         wprint("Unable to initialize tables in the in-memory database", debug)
