@@ -38,21 +38,21 @@ def dbWorker(conf_name, connection_string, table_name, row_only, debug):
         wprint(e, debug)
         exit()
     try:
-        mem_cur.execute("CREATE TABLE %s (PKey, md5sum)" % (table_name + "_" + conf_name))
-        mem_cur.execute("CREATE INDEX %s ON %s (PKey)" % (table_name + "_" + conf_name + "_idx", (table_name + "_" + conf_name)))
+        mem_cur.execute("CREATE TABLE %s (PKey, md5sum)" % (table_name[0] + "_" + table_name[1] + "_" + conf_name))
+        mem_cur.execute("CREATE INDEX %s ON %s (PKey)" % (table_name[0] + "_" + table_name[1] + "_" + conf_name + "_idx", (table_name + "_" + conf_name)))
         mem_db.commit()
     except Exception as e:
         wprint("Unable to initialize tables in the in-memory database", debug)
         wprint(e, debug)
         exit()
-    cur.execute("SELECT c.column_name FROM information_schema.key_column_usage AS c JOIN information_schema.table_constraints AS t ON t.constraint_name = c.constraint_name WHERE t.table_name ='" + table_name + "' AND t.constraint_type = 'PRIMARY KEY';")
+    cur.execute("SELECT c.column_name FROM information_schema.key_column_usage AS c JOIN information_schema.table_constraints AS t ON t.constraint_name = c.constraint_name WHERE t.table_name ='" + table_name[0] + "' AND t.constraint_type = 'PRIMARY KEY';")
     try:
         primary_key = cur.fetchone()[0]
-        cur.execute("select " + primary_key + ",md5(cast(tab.* as text)) from " + table_name + " tab;")
+        cur.execute("select %s,length(%s) from %s tab;" % (primary_key, table_name[1], table_name[0]))
     except Exception as e:
         wprint("\t No PKey found", debug)
         wprint(e, debug)
-        cur.execute("select count(*) from " + table_name + " tab;")
+        cur.execute("select count(*) from " + table_name[0] + " tab;")
         row_only.value = int(cur.fetchone()[0])
         cur.close()
         db.close()
@@ -64,14 +64,14 @@ def dbWorker(conf_name, connection_string, table_name, row_only, debug):
             row = cur.fetchone()
             if row == None:
                 break
-            mem_cur.execute("INSERT INTO %s VALUES ('%s', '%s')" % (table_name + "_" + conf_name, row[0], row[1]))
+            mem_cur.execute("INSERT INTO %s VALUES ('%s', '%s')" % (table_name[0] + "_" + table_name[1] + "_" + conf_name, row[0], row[1]))
             mem_db.commit()
     except Exception as e:
         wprint("Unable to store in the in-memory database", debug)
         wprint(e, debug)
     cur.close()
     db.close()
-    mem_cur.execute("SELECT COUNT(*) from %s" % (table_name + "_" + conf_name))
+    mem_cur.execute("SELECT COUNT(*) from %s" % (table_name[0] + "_" + table_name[1] + "_" + conf_name))
     wprint("Inserted %d rows into table" % mem_cur.fetchone()[0], debug)
     mem_cur.close()
     mem_db.close()

@@ -71,18 +71,17 @@ def main():
     test_database = sqlite3.connect("file:/dev/shm/deepcompare_%s" % "test", uri=True)
     test_database.isolation_level = None
 
-    truth_cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
-    truth_table_list = list(map(lambda x: x[0], truth_cur.fetchall()))
-    truth_table_list.sort()
+    truth_cur.execute("select table_name,column_name from information_schema.columns where data_type='character varying' and character_maximum_length is not null and table_schema='public';")
+    truth_table_list = truth_cur.fetchall()
     truth_cur.close()
     truth_db.close()
 
-    test_cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
-    test_table_list = list(map(lambda x: x[0], test_cur.fetchall()))
-    test_table_list.sort()
+    test_cur.execute("select table_name,column_name from information_schema.columns where data_type='character varying' and character_maximum_length is not null and table_schema='public';")
+    test_table_list = test_cur.fetchall()
     test_cur.close()
     test_db.close()
 
+    '''
     if truth_table_list != test_table_list:
         print("ERROR: Databases do not contain the same tables. You're on your own...")
         if len(truth_table_list) > len(test_table_list):
@@ -92,7 +91,7 @@ def main():
             print("Test database has additional rows:")
             prettyprint(list(set(test_table_list)-set(truth_table_list)))
         exit()
-
+    '''
 
     # Setting up manager variables: these are used if a table does not contain a
     # primary key. The row count is stored in these. Additionally they are cast to
@@ -141,9 +140,9 @@ def main():
                 print("\t Row count OK")
             error = 0
             mem_true = truth_database.cursor()
-            mem_true.execute("SELECT * from %s order by PKey" % (table + "_" + "truth"))
+            mem_true.execute("SELECT * from %s order by PKey" % (table[0] + "_" + table[1] + "_" + "truth"))
             mem_test = test_database.cursor()
-            mem_test.execute("SELECT * from %s order by PKey" % (table + "_" + "test"))
+            mem_test.execute("SELECT * from %s order by PKey" % (table[0] + "_" + table[1] + "_" + "test"))
             while True:
                 true_val = mem_true.fetchone()
                 test_val = mem_test.fetchone()
@@ -157,8 +156,8 @@ def main():
             else:
                 print("\tHash comparison OK")
 
-            mem_true.execute("DROP TABLE %s" % (table + "_" + "truth"))
-            mem_test.execute("DROP TABLE %s" % (table + "_" + "test"))
+            mem_true.execute("DROP TABLE %s" % (table_[0] + "_" + table[1] + "_" + "truth"))
+            mem_test.execute("DROP TABLE %s" % (table_[0] + "_" + table[1] + "_" + "test"))
             mem_true.close()
             mem_test.close()
 
