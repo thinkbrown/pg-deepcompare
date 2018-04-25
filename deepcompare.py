@@ -66,7 +66,7 @@ def main():
         print("Both Connections established... Go time!")
         exit()
 
-    database = sqlite3.connect("file:/dev/shm/deepcompare?cache=shared", check_same_thread=False, uri=True)
+    database = sqlite3.connect("file:/dev/shm/deepcompare", uri=True)
     database.isolation_level = None
 
     truth_cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")

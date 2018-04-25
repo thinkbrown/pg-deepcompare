@@ -30,7 +30,7 @@ def dbWorker(conf_name, connection_string, table_name, row_only, debug):
         wprint(e, debug)
         exit()
     try:
-        mem_db = sqlite3.connect("file:/dev/shm/deepcompare?cache=shared", check_same_thread=False, uri=True)
+        mem_db = sqlite3.connect("file:/dev/shm/deepcompare", uri=True)
         mem_db.isolation_level = None
         mem_cur = mem_db.cursor()
     except Exception as e:
