@@ -154,6 +154,9 @@ def main():
                 print("\t Hash count complete (%d errors)" % error)
             else:
                 print("\tHash comparison OK")
+
+            mem_true.execute("DROP TABLE %s" % (table + "_" + "truth"))
+            mem_test.execute("DROP TABLE %s" % (table + "_" + "test"))
             mem_true.close()
             mem_test.close()
 
