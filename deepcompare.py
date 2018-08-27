@@ -18,7 +18,7 @@ from configValidator import configValidator
 
 
 # Read in the task definition (this needs future work to allow commandline flags)
-Config = configparser.ConfigParser()
+Config = configparser.RawConfigParser()
 Config.read('task.cfg')
 debug = Config.getboolean("Global", "debug")
 contest = Config.getboolean("Global", "connection_test")
@@ -171,7 +171,8 @@ def graceful_shutdown(signal, frame):
         print('Terminating gracefully...')
         test_proc.terminate()
         truth_proc.terminate()
-        os.remove('/dev/shm/deepcompare')
+        os.remove("/dev/shm/deepcompare_%s" % "truth")
+        os.remove("/dev/shm/deepcompare_%s" % "test")
         sys.exit(0)
 
 # Glue logic to start the main function and remove the sqlite database on successful
@@ -180,4 +181,5 @@ def graceful_shutdown(signal, frame):
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, graceful_shutdown)
     main()
-    os.remove('/dev/shm/deepcompare')
+    os.remove("/dev/shm/deepcompare_%s" % "truth")
+    os.remove("/dev/shm/deepcompare_%s" % "test")
