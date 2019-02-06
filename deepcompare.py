@@ -15,6 +15,7 @@ from dbworker import dbWorker
 from multiprocessing import Process, Manager, Value
 from helpers import prettyprint, getCount
 from configValidator import configValidator
+from time import sleep
 
 
 # Read in the task definition (this needs future work to allow commandline flags)
