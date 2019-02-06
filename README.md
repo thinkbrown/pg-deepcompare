@@ -16,7 +16,4 @@
 
 ------------
 
-Copyright PatientsLikeMe 2018
-
-[logan.brown@patientslikeme.com](mailto:logan.brown@patientslikeme.com)
-
+Copyright 2018-2019 PatientsLikeMe. Distributed under the MIT license. See LICENSE.txt for further details. 
